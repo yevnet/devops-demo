@@ -36,5 +36,28 @@ pipeline {
 				sh "mvn failsafe:integration-test failsafe:verify"
 			}
 		}
+		stage('Package') {
+			steps{
+				sh "mvn package -DskipTests"
+			}
+		}
+		stage('Build docker image') {
+			steps {
+				//"docker build -t devops-demo:$env.BUILD_TAG"
+				script {
+					dockerImage = docker.build("eugene77/devops-demo:${env.BUILD_ID}")
+				}
+			}
+		}
+		stage('Push Docker Image') {
+			steps {
+				script {
+					docker.withRegistry('','dockerhub') {
+						dockerImage.push();
+						dockerImage.push('latest');
+					}
+				}
+			}
+		}
 	}
 }
